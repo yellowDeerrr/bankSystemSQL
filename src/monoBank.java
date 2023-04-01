@@ -11,7 +11,7 @@ public class monoBank extends Main {
     public monoBank(){
         Scanner in = new Scanner(System.in);
 
-        System.out.println("1 - Create new card Mono\n2 - View card\n3 - Trade money to another card\n4 - Back\n5 - Main menu");
+        System.out.println("1 - Create new card Mono\n2 - View card\n3 - Trade money to another card\n4 - /History of operations\n5 - Back\n6 - Main menu");
         int userAnswerMainMenu = in.nextInt();
         if (userAnswerMainMenu == 1)
             createNewCardMono();
@@ -19,9 +19,11 @@ public class monoBank extends Main {
             viewAllInfoAboutCardMono();
         else if (userAnswerMainMenu == 3) {
             checkNumberAndCardUserAndCardToTrade();
-        } else if (userAnswerMainMenu == 4)
+        } else if (userAnswerMainMenu == 4) {
+            viewHistoryOfOperations();
+        } else if (userAnswerMainMenu == 5)
             Main.onlineCardMonoOrPrivat24();
-        else if (userAnswerMainMenu == 5)
+        else if (userAnswerMainMenu == 6)
             mainMenu();
         else {
             System.out.println("Error, try again");
@@ -128,7 +130,7 @@ public class monoBank extends Main {
                             System.out.println(timestamp);
                             statement.executeUpdate("update users set userMoney = ('"+sum+"') where userNumber = ('"+number+"') and userNumberCard = ('"+numberCard+"')");
                             statement.executeUpdate("update users set userMoney = ('"+sumCardToTrade+"') where userNumberCard = ('"+numberCardToTrade+"')");
-                            sts.executeUpdate("insert into cardHistory_" + numberCard + " (sum, whom, time) values (('"+howMuch+"'), ('"+numberCardToTrade+"'), ('"+timestamp+"'))");
+                            sts.executeUpdate("insert into cardHistory_" + numberCard + " (sum, whom, time) values (('"+(-howMuch)+"'), ('"+numberCardToTrade+"'), ('"+timestamp+"'))");
                             System.out.println("Operation successful");
                             viewAllInfoAboutUserCard(number, numberCard);
                         }
@@ -356,26 +358,38 @@ public class monoBank extends Main {
             return connection;
         }
 
-        public static void viewHistoryOfCard(String number, String numberCard) {
-            MonoBankDB BankDB = new MonoBankDB();
+        public static void viewHistoryOfCard(String number, String numberCard){
+            MonoBankDBUsersHistory monoBankDBUsersHistory = new MonoBankDBUsersHistory();
+            MonoBankDB monoBankDB = new MonoBankDB();
             Scanner in = new Scanner(System.in);
 
-            String query = "select * from cardHistory_" + numberCard + " where exists (select userNumber, userNumberCard from users where userNumberCard = ('"+numberCard+"')) and userNumber = ('"+number+"')";
+            String query = "select * from CardHistory_" + numberCard ;
             try {
-                Statement statement = BankDB.getConnection().createStatement();
-                ResultSet resultSet = statement.executeQuery(query);
+                Statement statement = monoBankDBUsersHistory.getConnection().createStatement();
+                Statement sts = monoBankDB.getConnection().createStatement();
+                ResultSet resultSet = sts.executeQuery("select * from users where userNumberCard = ('"+numberCard+"') and userNumber = ('"+number+"')");
                 if (resultSet.next()) {
-                    int id = resultSet.getInt(1);
-                    String whom = resultSet.getString(2);
-                    String time = resultSet.getString(3);
-                    while (resultSet.next()) {
-                        System.out.println("id: " + id + "\nWhom: " + whom + "time: " + time);
+                    int result = resultSet.getInt(1);
+                    resultSet = statement.executeQuery(query);
+                    if (resultSet.next()) {
+                            while(resultSet.next()) {
+                                int id = resultSet.getInt(1);
+                                int sum = resultSet.getInt(2);
+                                String whom = resultSet.getString(3);
+                                String time = resultSet.getString(4);
+                                TimeUnit.SECONDS.sleep((long) 2.5);
+                                System.out.println("id: " + id + "\nSum: " + sum + "\nWhom: " + whom + "\ntime: " + time + "\n\n");
+                            }
                     }
+                    else
+                        System.out.println("No");
                 } else {
                     System.out.println("Nothing info about trade or number card, number is not correct");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -407,6 +421,18 @@ public class monoBank extends Main {
         System.out.println(viewAllInfoUserNumber);
         System.out.println(viewAllInfoUserNumberCard);
         MonoBankDB.viewAllInfoAboutUserCard(viewAllInfoUserNumber, viewAllInfoUserNumberCard);
+    }
+
+    public static void viewHistoryOfOperations(){
+        Scanner in = new Scanner(System.in);
+
+        System.out.print("Enter your phone number +380-");
+        String userNumber = in.nextLine();
+
+        System.out.print("Enter your card number(without space): ");
+        String userNumberCard = in.nextLine();
+
+        MonoBankDBUsersHistory.viewHistoryOfCard(userNumber, userNumberCard);
     }
 
     public static void checkNumberAndCardUserAndCardToTrade() {
