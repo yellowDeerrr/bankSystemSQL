@@ -11,7 +11,7 @@ public class monoBank extends Main {
     public monoBank(){
         Scanner in = new Scanner(System.in);
 
-        System.out.println("1 - Create new card Mono\n2 - View card\n3 - Trade money to another card\n4 - /History of operations\n5 - Back\n6 - Main menu");
+        System.out.println("1 - Create new card Mono\n2 - View card\n3 - Trade money to another card\n4 - History of operations\n5 - Back\n6 - Main menu");
         int userAnswerMainMenu = in.nextInt();
         if (userAnswerMainMenu == 1)
             createNewCardMono();
@@ -21,9 +21,9 @@ public class monoBank extends Main {
             checkNumberAndCardUserAndCardToTrade();
         } else if (userAnswerMainMenu == 4) {
             viewHistoryOfOperations();
-        } else if (userAnswerMainMenu == 5)
+        } else if (userAnswerMainMenu == 5) {
             Main.onlineCardMonoOrPrivat24();
-        else if (userAnswerMainMenu == 6)
+        } else if (userAnswerMainMenu == 6)
             mainMenu();
         else {
             System.out.println("Error, try again");
@@ -82,8 +82,6 @@ public class monoBank extends Main {
         private final static String userName = "root";
         private final static String password = "root";
 
-        private final static String jdbcURLL = "jdbc:mysql://localhost:3306/bankUsers";
-
 
         private Connection connection;
 
@@ -123,7 +121,7 @@ public class monoBank extends Main {
                         int colum2 = resultSet.getInt(4);
                         System.out.print("Your balance: " + colum1 + "\nHow much you want trade: ");
                         int howMuch = in.nextInt();
-                        if (colum1 > howMuch){
+                        if (colum1 >= howMuch){
                             int sum = colum1 - howMuch;
                             int sumCardToTrade = colum2 + howMuch;
                             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -131,6 +129,7 @@ public class monoBank extends Main {
                             statement.executeUpdate("update users set userMoney = ('"+sum+"') where userNumber = ('"+number+"') and userNumberCard = ('"+numberCard+"')");
                             statement.executeUpdate("update users set userMoney = ('"+sumCardToTrade+"') where userNumberCard = ('"+numberCardToTrade+"')");
                             sts.executeUpdate("insert into cardHistory_" + numberCard + " (sum, whom, time) values (('"+(-howMuch)+"'), ('"+numberCardToTrade+"'), ('"+timestamp+"'))");
+                            sts.executeUpdate("insert into cardHistory_" + numberCardToTrade + " (sum, whom, time) values (('"+howMuch+"'), ('"+numberCardToTrade+"'), ('"+timestamp+"'))");
                             System.out.println("Operation successful");
                             viewAllInfoAboutUserCard(number, numberCard);
                         }
@@ -229,11 +228,13 @@ public class monoBank extends Main {
 
         public static void replenishCardDB(String numberCheck, String numberCardCheck){
             MonoBankDB BankDB = new MonoBankDB();
+            MonoBankDBUsersHistory monoBankDBUsersHistory = new MonoBankDBUsersHistory();
             Scanner in = new Scanner(System.in);
 
             String query = "select userNumber, userNumberCard, userMoney from users where exists (select userNumber, userNumberCard from users where userNumberCard = ('"+numberCardCheck+"')) and userNumber = ('"+numberCheck+"')";
             try{
                 Statement statement = BankDB.getConnection().createStatement();
+                Statement sts = monoBankDBUsersHistory.getConnection().createStatement();
                 ResultSet resultSet = statement.executeQuery(query);
                 if (resultSet.next()){
                     int userMoney = Integer.parseInt(resultSet.getString(3));
@@ -242,6 +243,9 @@ public class monoBank extends Main {
                     int userWantReplenish = in.nextInt();
                     int sum = userWantReplenish + userMoney;
                     statement.executeUpdate("update users set userMoney = ('"+sum+"') where userNumber = ('"+numberCheck+"') and userNumberCard = ('"+numberCardCheck+"')");
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                    String ATM = "ATM";
+                    sts.executeUpdate("insert into cardHistory_" + numberCardCheck + " (sum, whom, time) values (('"+(userWantReplenish)+"'), ('"+ATM+"'), ('"+timestamp+"'))");
                     viewAllInfoAboutUserCard(numberCheck, numberCardCheck);
                 }
                 else {
@@ -256,11 +260,13 @@ public class monoBank extends Main {
 
         public static void withdrawMoneyFromMono(String numberCheck, String numberCardCheck){
             MonoBankDB BankDB = new MonoBankDB();
+            MonoBankDBUsersHistory monoBankDBUsersHistory = new MonoBankDBUsersHistory();
             Scanner in = new Scanner(System.in);
 
             String query = "select userNumber, userNumberCard, userMoney from users where exists (select userNumber, userNumberCard from users where userNumberCard = ('"+numberCardCheck+"')) and userNumber = ('"+numberCheck+"')";
             try{
                 Statement statement = BankDB.getConnection().createStatement();
+                Statement sts = monoBankDBUsersHistory.getConnection().createStatement();
                 ResultSet resultSet = statement.executeQuery(query);
                 if (resultSet.next()){
                     int userMoney = resultSet.getInt(3);
@@ -271,9 +277,13 @@ public class monoBank extends Main {
                     if (sum < 0){
                         System.out.println("You don't have a lot of money");
                         withdrawMoneyFromMono(numberCheck, numberCardCheck);
+                    }else {
+                        statement.executeUpdate("update users set userMoney = ('"+sum + "') where userNumber = ('" + numberCheck + "') and userNumberCard = ('" + numberCardCheck + "')");
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        String ATM = "ATM";
+                        sts.executeUpdate("insert into cardHistory_" + numberCardCheck + " (sum, whom, time) values (('"+(-userWantReplenish)+"'), ('"+ATM+"'), ('"+timestamp+"'))");
+                        viewAllInfoAboutUserCard(numberCheck, numberCardCheck);
                     }
-                    statement.executeUpdate("update users set userMoney = ('"+sum+"') where userNumber = ('"+numberCheck+"') and userNumberCard = ('"+numberCardCheck+"')");
-                    viewAllInfoAboutUserCard(numberCheck, numberCardCheck);
                 }
                 else {
                     System.out.println("Something is not correct");
