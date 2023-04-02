@@ -78,7 +78,7 @@ public class monoBank extends Main {
 
     static class MonoBankDB{
 
-        private final static String jdbcURL = "jdbc:mysql://localhost:3306/bankUsers";
+        private final static String jdbcURL = "jdbc:mysql://localhost:3306/bankSystem";
         private final static String userName = "root";
         private final static String password = "root";
 
@@ -113,7 +113,7 @@ public class monoBank extends Main {
                 Statement statement = BankDB.getConnection().createStatement();
                 Statement sts = monoBankDBUsersHistory.getConnection().createStatement();
                 ResultSet resultSet = statement.executeQuery("select * from users where userNumber = ('"+number+"') and userNumberCard = ('"+numberCard+"')");
-
+                System.out.println();
                 if (resultSet.next()){
                     int colum1 = resultSet.getInt(4);
                     resultSet = statement.executeQuery("select * from users where userNumberCard = ('"+numberCardToTrade+"')");
@@ -350,9 +350,6 @@ public class monoBank extends Main {
         private final static String jdbcURL = "jdbc:mysql://localhost:3306/bankUsersHistory";
         private final static String userName = "root";
         private final static String password = "root";
-
-        private final static String jdbcURLL = "jdbc:mysql://localhost:3306/bankUsersHistory";
-
 
         private Connection connection;
 
