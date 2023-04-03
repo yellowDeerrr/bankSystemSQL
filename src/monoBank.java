@@ -78,7 +78,7 @@ public class monoBank extends Main {
 
     static class MonoBankDB{
 
-        private final static String jdbcURL = "jdbc:mysql://localhost:3306/bankSystem";
+        private final static String jdbcURL = "jdbc:mysql://root:D4m5psyU8XArD2UGvalc@containers-us-west-48.railway.app:5771/railway";
         private final static String userName = "root";
         private final static String password = "root";
 
@@ -93,7 +93,7 @@ public class monoBank extends Main {
                 ResultSet resultSet = statement.executeQuery("select * from users where exists (select userNumber from users where userNumber = ('"+number+"'))");
                 if (resultSet.next()){
                     System.out.println("Number is already using");
-                    monoBank.createNewCardMono();
+                    createNewCardMono();
                 }
                 else{
                     userNumber = number;
@@ -173,7 +173,7 @@ public class monoBank extends Main {
                     randomNumberCard();
                 }
                 else {
-                    System.out.println("Your number card is " + userNumberCardForUser);
+                    System.out.println("Your number card is " + userNumberCardForUser + " (раджу записати)");
                     addUserInDB();
                 }
 
@@ -347,7 +347,7 @@ public class monoBank extends Main {
     }
 
     static class MonoBankDBUsersHistory {
-        private final static String jdbcURL = "jdbc:mysql://localhost:3306/bankUsersHistory";
+        private final static String jdbcURL = "jdbc:mysql://root:CFkxSs41OCBFGtxtIc3S@containers-us-west-46.railway.app:7515/railway";
         private final static String userName = "root";
         private final static String password = "root";
 
@@ -370,7 +370,7 @@ public class monoBank extends Main {
             MonoBankDB monoBankDB = new MonoBankDB();
             Scanner in = new Scanner(System.in);
 
-            String query = "select * from CardHistory_" + numberCard ;
+            String query = "select * from cardHistory_" + numberCard ;
             try {
                 Statement statement = monoBankDBUsersHistory.getConnection().createStatement();
                 Statement sts = monoBankDB.getConnection().createStatement();
@@ -379,14 +379,16 @@ public class monoBank extends Main {
                     int result = resultSet.getInt(1);
                     resultSet = statement.executeQuery(query);
                     if (resultSet.next()) {
-                            while(resultSet.next()) {
-                                int id = resultSet.getInt(1);
-                                int sum = resultSet.getInt(2);
-                                String whom = resultSet.getString(3);
-                                String time = resultSet.getString(4);
-                                TimeUnit.SECONDS.sleep((long) 2.5);
-                                System.out.println("id: " + id + "\nSum: " + sum + "\nWhom: " + whom + "\ntime: " + time + "\n\n");
-                            }
+                        while(resultSet.next()) {
+                            int id = resultSet.getInt(1);
+                            int sum = resultSet.getInt(2);
+                            String whom = resultSet.getString(3);
+                            String time = resultSet.getString(4);
+                            TimeUnit.SECONDS.sleep((long) 2.5);
+                            System.out.println("id: " + id + "\nSum: " + sum + "\nWhom: " + whom + "\ntime: " + time + "\n\n");
+                        }
+                        System.out.println("first operation doesn't out(");
+                        mainMenu();
                     }
                     else
                         System.out.println("No");
